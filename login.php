@@ -14,18 +14,16 @@ if( isset($_GET['action']) && $_GET['action'] == "login"){
 if(isset($_POST["capt"]) &&  strlen($_POST["capt"])>0 ) {
   $userGesture = $_POST["capt"];
   if($userGesture == $_SESSION["capture"]){
-      echo "1";
       // valid capture gestute
       deleteCapture();
       include "$_SERVER[DOCUMENT_ROOT]/capture/views/success.php";
   }
   else if (isset($_SESSION["fails"]) && $_SESSION["fails"]>=2 ){
-  echo "2";
+
   deleteCapture();
   createCapture();
   }
   else if(isset($_POST["capt"])){
-    echo "3";
   $_SESSION["fails"] +=1;
  // include required page
   include "$_SERVER[DOCUMENT_ROOT]/capture/views/login.php";
@@ -39,15 +37,27 @@ if(isset($_POST["capt"]) &&  strlen($_POST["capt"])>0 ) {
 function makeImg($text){
   $im = imagecreatetruecolor(220, 50);
   $color = imagecolorallocate($im, 40, 130, 0);
+  $lineColor = imagecolorallocate($im, 40, 0, 140);
   imagefill($im, 0, 0, $color);
   $text_color = imagecolorallocate($im, 255, 255, 255);
   imagestring($im, 5, 100, 20,  $text, $text_color);
+  imageline( $im , 1 , 50, 200 , 0 , $lineColor);
+  imageline( $im , 70 , 0, 200 , 50 , $lineColor);
   //imagettftext($im, 20, 0, 10, 20, $text_color,"ARIAL",$text );
 
 
   // Save the image as 'simpletext.jpg'
+  // here we have to replace time() with $_SESSION['id'] because time() could be duplicated !
   $imageSrc= './captures/capture'.time().'.png';
-  imagepng($im, $imageSrc);
+  try {
+    if(!imagepng($im, $imageSrc)){
+      throw new Exception('Could not cretate capture');
+    }
+  } catch (Exception $e) {
+    die ('Capture not created: ' . $e->getMessage());
+  }
+
+
   // Free up memory
   imagedestroy($im);
   return $imageSrc;
